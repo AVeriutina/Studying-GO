@@ -72,24 +72,79 @@ func do(cmd Command) error {
 		return nil
 
 	case "change_amount":
-		if err := changeAmount(cmd); err != nil {
+		if err := change_amount(cmd); err != nil {
 			return fmt.Errorf("change amount of account failed: %w", err)
 		}
 
 		return nil
 
 	case "change_name":
-		if err := changeName(cmd); err != nil {
+		if err := change_name(cmd); err != nil {
 			return fmt.Errorf("change name of account failed: %w", err)
 		}
 
 		return nil
+
+	case "delete":
+		if err := deleted(cmd); err != nil {
+			return fmt.Errorf("delete account failed: %w", err)
+		}
+
+		return nil
+
 	default:
 		return fmt.Errorf("unknown command %s", cmd.Cmd)
 	}
 }
 
-func changeName(cmd Command) error {
+func deleted(cmd Command) error {
+	if len(cmd.Name) == 0 {
+		return fmt.Errorf("name is empty")
+	}
+
+	request := dto.DeleteAccountRequest{
+		Name: cmd.Name,
+	}
+
+	data, err := json.Marshal(request)
+	if err != nil {
+		return fmt.Errorf("json marshal failed: %w", err)
+	}
+
+	req, err := http.NewRequest(
+		"DELETE",
+		fmt.Sprintf("http://%s:%d/account/delete", cmd.Host, cmd.Port),
+		bytes.NewReader(data),
+	)
+	req.Header.Add("Content-type", "application/json")
+
+	if err != nil {
+		return fmt.Errorf("http delete failed: %w", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	if resp.StatusCode == http.StatusNoContent {
+		return nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("read body failed: %w", err)
+	}
+
+	return fmt.Errorf("resp error %s", string(body))
+}
+
+func change_name(cmd Command) error {
 	if len(cmd.Name) == 0 || len(cmd.NewName) == 0 {
 		return fmt.Errorf("name is empty")
 	}
@@ -104,13 +159,21 @@ func changeName(cmd Command) error {
 		return fmt.Errorf("json marshal failed: %w", err)
 	}
 
-	resp, err := http.Post(
+	req, err := http.NewRequest(
+		"PATCH",
 		fmt.Sprintf("http://%s:%d/account/change_name", cmd.Host, cmd.Port),
-		"application/json",
 		bytes.NewReader(data),
 	)
+	req.Header.Add("Content-type", "application/json")
+
 	if err != nil {
-		return fmt.Errorf("http post failed: %w", err)
+		return fmt.Errorf("http patch failed: %w", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
 	}
 
 	defer func() {
@@ -129,7 +192,7 @@ func changeName(cmd Command) error {
 	return fmt.Errorf("resp error %s", string(body))
 }
 
-func changeAmount(cmd Command) error {
+func change_amount(cmd Command) error {
 	if len(cmd.Name) == 0 {
 		return fmt.Errorf("name is empty")
 	}
@@ -144,13 +207,21 @@ func changeAmount(cmd Command) error {
 		return fmt.Errorf("json marshal failed: %w", err)
 	}
 
-	resp, err := http.Post(
-		fmt.Sprintf("%s:%d/account/change_amount", cmd.Host, cmd.Port),
-		"application/json",
+	req, err := http.NewRequest(
+		"PATCH",
+		fmt.Sprintf("http://%s:%d/account/change_amount", cmd.Host, cmd.Port),
 		bytes.NewReader(data),
 	)
+	req.Header.Add("Content-type", "application/json")
+
 	if err != nil {
-		return fmt.Errorf("http post failed: %w", err)
+		return fmt.Errorf("http patch failed: %w", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
 	}
 
 	defer func() {

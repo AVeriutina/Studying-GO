@@ -17,10 +17,10 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.POST("/account/create", accountsHandler.CreateAccount)
-	e.GET("/account/get", accountsHandler.GetAccount)
+	e.GET("/account", accountsHandler.GetAccount)
 	e.DELETE("/account/delete", accountsHandler.DeleteAccount)
 	e.PATCH("/account/change_amount", accountsHandler.PatchAccount)
-	e.PUT("/account/change_name", accountsHandler.ChangeAccount)
+	e.PATCH("/account/change_name", accountsHandler.ChangeAccount)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":1323"))

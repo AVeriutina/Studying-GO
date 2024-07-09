@@ -138,6 +138,9 @@ func (h *Handler) ChangeAccount(c echo.Context) error {
 	if _, ok := h.accounts[request.PrevName]; !ok {
 		return c.String(http.StatusBadRequest, "account doesn't exist")
 	}
+	if _, ok := h.accounts[request.NewName]; ok {
+		return c.String(http.StatusBadRequest, "account with such name already exists")
+	}
 
 	h.guard.Lock()
 
