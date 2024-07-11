@@ -2,6 +2,7 @@ package main
 
 import (
 	"awesomeProject/accounts/dto"
+	"awesomeProject/cmd"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -9,28 +10,6 @@ import (
 	"io"
 	"net/http"
 )
-
-type Command struct {
-	Port    int
-	Host    string
-	Cmd     string
-	Name    string
-	Amount  int
-	NewName string
-}
-
-func (c *Command) Do() error {
-	switch c.Cmd {
-	case "create":
-		return c.create()
-	default:
-		return fmt.Errorf("unknown command: %s", c.Cmd)
-	}
-}
-
-func (c *Command) create() error {
-	panic("implement me")
-}
 
 func main() {
 	portVal := flag.Int("port", 8080, "server port")
@@ -42,7 +21,7 @@ func main() {
 
 	flag.Parse()
 
-	cmd := Command{
+	command := cmd.Command{
 		Port:    *portVal,
 		Host:    *hostVal,
 		Cmd:     *cmdVal,
@@ -51,12 +30,12 @@ func main() {
 		NewName: *newnameVal,
 	}
 
-	if err := do(cmd); err != nil {
+	if err := do(command); err != nil {
 		panic(err)
 	}
 }
 
-func do(cmd Command) error {
+func do(cmd cmd.Command) error {
 	switch cmd.Cmd {
 	case "create":
 		if err := create(cmd); err != nil {
@@ -97,7 +76,7 @@ func do(cmd Command) error {
 	}
 }
 
-func deleted(cmd Command) error {
+func deleted(cmd cmd.Command) error {
 	if len(cmd.Name) == 0 {
 		return fmt.Errorf("name is empty")
 	}
@@ -144,7 +123,7 @@ func deleted(cmd Command) error {
 	return fmt.Errorf("resp error %s", string(body))
 }
 
-func change_name(cmd Command) error {
+func change_name(cmd cmd.Command) error {
 	if len(cmd.Name) == 0 || len(cmd.NewName) == 0 {
 		return fmt.Errorf("name is empty")
 	}
@@ -192,7 +171,7 @@ func change_name(cmd Command) error {
 	return fmt.Errorf("resp error %s", string(body))
 }
 
-func change_amount(cmd Command) error {
+func change_amount(cmd cmd.Command) error {
 	if len(cmd.Name) == 0 {
 		return fmt.Errorf("name is empty")
 	}
@@ -240,12 +219,12 @@ func change_amount(cmd Command) error {
 	return fmt.Errorf("resp error %s", string(body))
 }
 
-func get(cmd Command) error {
+func get(cmd cmd.Command) error {
 	resp, err := http.Get(
 		fmt.Sprintf("http://%s:%d/account?name=%s", cmd.Host, cmd.Port, cmd.Name),
 	)
 	if err != nil {
-		return fmt.Errorf("http post failed: %w", err)
+		return fmt.Errorf("http get failed: %w", err)
 	}
 
 	defer func() {
@@ -271,7 +250,7 @@ func get(cmd Command) error {
 	return nil
 }
 
-func create(cmd Command) error {
+func create(cmd cmd.Command) error {
 	if len(cmd.Name) == 0 {
 		return fmt.Errorf("name is empty")
 	}
