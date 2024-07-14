@@ -118,7 +118,7 @@ func main() {
 	client := Client{proto.NewAccountManagerClient(conn)}
 
 	if err := client.do(command); err != nil {
-		panic(err)
+		fmt.Errorf("the database modification process failed: %w", err)
 	}
 
 }

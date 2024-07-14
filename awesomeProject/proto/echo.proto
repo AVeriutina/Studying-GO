@@ -17,7 +17,9 @@ message CreateAccountRequest {
   int32 Amount = 2;
 }
 
-message CreateAccountReply {}
+message CreateAccountReply {
+  int64 AccountId = 1;
+}
 
 message GetAccountRequest {
   string Name = 1;
